@@ -61,3 +61,23 @@ class TestExtractFromSymbol:
 
         with pytest.raises(ValueError):
             extract_quote_from_symbol("123EUR")
+
+
+class TestToDecimal:
+    def test_to_decimal_with_valid_values(self):
+        assert to_decimal(Decimal(1.0)) == Decimal(1.0)
+        assert to_decimal(1) == Decimal(1)
+        assert to_decimal(1.0) == Decimal(1.0)
+        assert to_decimal("1.0") == Decimal(1.0)
+        assert to_decimal("1") == Decimal(1)
+        assert to_decimal("1.0") == Decimal(1.0)
+
+    def test_to_decimal_with_invalid_values(self):
+        with pytest.raises(ValueError):
+            to_decimal(None)
+        with pytest.raises(ValueError):
+            to_decimal("invalid")
+        with pytest.raises(ValueError):
+            to_decimal(object())
+        with pytest.raises(ValueError):
+            to_decimal("12f")

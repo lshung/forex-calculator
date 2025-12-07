@@ -1,5 +1,6 @@
 import re
-from typing import Tuple
+from decimal import Decimal
+from typing import Tuple, Union
 
 
 def parse_symbol(symbol: str) -> Tuple[str, str]:
@@ -30,3 +31,12 @@ def extract_base_from_symbol(symbol: str) -> str:
 def extract_quote_from_symbol(symbol: str) -> str:
     _, quote = parse_symbol(symbol)
     return quote
+
+def to_decimal(value: Union[Decimal, int, float, str]) -> Decimal:
+    if isinstance(value, Decimal):
+        return value
+
+    try:
+        return Decimal(str(value))
+    except:
+        raise ValueError(f"Cannot convert value '{value}' to Decimal.")
