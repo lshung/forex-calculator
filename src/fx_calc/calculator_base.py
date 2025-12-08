@@ -1,11 +1,17 @@
 from decimal import Decimal
 from typing import Optional, Union
-from src.fx_calc.utils import validate_symbol, to_decimal
+from src.fx_calc.utils import *
 
 
-class Calculator:
+class CalculatorBase:
     def __init__(self):
         self._symbol: Optional[str] = None
+        self._base_currency: Optional[str] = None
+        self._quote_currency: Optional[str] = None
+        self._pip_value: Optional[Decimal] = None
+        self._lot_size: Optional[Decimal] = None
+        self._target_currency: Optional[str] = "USD"
+        self._exchange_rate: Optional[dict] = {"symbol": None, "rate": None}
         self._is_long: Optional[bool] = None
         self._position_size_in_lots: Optional[Decimal] = None
         self._entry_price: Optional[Decimal] = None
@@ -17,9 +23,7 @@ class Calculator:
         self._tp_in_points: Optional[Decimal] = None
         self._sl_in_money: Optional[Decimal] = None
         self._tp_in_money: Optional[Decimal] = None
-        self._commission_currency: Optional[str] = None
         self._commission_per_lot_in_pips: Optional[Decimal] = None
-        self._commission_per_lot_in_points: Optional[Decimal] = None
         self._commission_per_lot_in_money: Optional[Decimal] = None
         self._sl_with_commission_in_pips: Optional[Decimal] = None
         self._tp_with_commission_in_pips: Optional[Decimal] = None
@@ -29,6 +33,9 @@ class Calculator:
         self._tp_with_commission_in_money: Optional[Decimal] = None
 
     def set_symbol(self, value: str):
+        if self._symbol is not None:
+            raise ValueError("Symbol is already set.")
+
         if not value or not isinstance(value, str):
             raise ValueError("Symbol must be a non-empty string.")
 
@@ -36,6 +43,24 @@ class Calculator:
             raise ValueError("Invalid symbol.")
 
         self._symbol = value
+        self._set_related_info_of_symbol()
+
+    def _set_related_info_of_symbol(self):
+        self._base_currency, self._quote_currency = parse_symbol(self._symbol)
+        self._pip_value = get_pip_value_by_symbol(self._symbol)
+        self._lot_size = get_lot_size_by_symbol(self._symbol)
+
+    def set_target_currency(self, value: str):
+        if not value or not isinstance(value, str):
+            raise ValueError("Target currency must be a non-empty string.")
+
+        self._target_currency = parse_currency(value)
+
+    def set_exchange_rate(self, value: dict):
+        if not isinstance(value, dict):
+            raise ValueError("Exchange rate must be a dictionary.")
+
+        self._exchange_rate = {"symbol": value.get("symbol"), "rate": to_decimal(value.get("rate"))}
 
     def set_is_long(self, value: bool):
         if not isinstance(value, bool):
@@ -50,6 +75,8 @@ class Calculator:
             raise ValueError("Position size must be positive.")
 
         self._position_size_in_lots = value
+        self._sl_in_money = None
+        self._sl_with_commission_in_money = None
 
     def set_entry_price(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -66,6 +93,8 @@ class Calculator:
             raise ValueError("Stop loss price must be positive.")
 
         self._sl_price = value
+        self._sl_in_pips = None
+        self._sl_in_points = None
 
     def set_tp_price(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -74,6 +103,8 @@ class Calculator:
             raise ValueError("Take profit price must be positive.")
 
         self._tp_price = value
+        self._tp_in_pips = None
+        self._tp_in_points = None
 
     def set_sl_in_pips(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -82,6 +113,8 @@ class Calculator:
             raise ValueError("Stop loss in pips must be positive.")
 
         self._sl_in_pips = value
+        self._sl_price = None
+        self._sl_in_points = None
 
     def set_tp_in_pips(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -90,6 +123,8 @@ class Calculator:
             raise ValueError("Take profit in pips must be positive.")
 
         self._tp_in_pips = value
+        self._tp_price = None
+        self._tp_in_points = None
 
     def set_sl_in_points(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -98,6 +133,8 @@ class Calculator:
             raise ValueError("Stop loss in points must be positive.")
 
         self._sl_in_points = value
+        self._sl_price = None
+        self._sl_in_pips = None
 
     def set_tp_in_points(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -106,6 +143,8 @@ class Calculator:
             raise ValueError("Take profit in points must be positive.")
 
         self._tp_in_points = value
+        self._tp_price = None
+        self._tp_in_pips = None
 
     def set_sl_in_money(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -114,12 +153,8 @@ class Calculator:
             raise ValueError("Stop loss in money must be positive.")
 
         self._sl_in_money = value
-
-    def set_commission_currency(self, value: str):
-        if not value or not isinstance(value, str):
-            raise ValueError("Commission currency must be a non-empty string.")
-
-        self._commission_currency = value
+        self._position_size_in_lots = None
+        self._sl_with_commission_in_money = None
 
     def set_commission_per_lot_in_money(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
@@ -136,3 +171,5 @@ class Calculator:
             raise ValueError("Stop loss with commission in money must be non-negative.")
 
         self._sl_with_commission_in_money = value
+        self._position_size_in_lots = None
+        self._sl_in_money = None
