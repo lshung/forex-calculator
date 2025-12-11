@@ -67,3 +67,6 @@ class Symbol:
         if digits <= 0:
             raise ValueError("Digits must be positive.")
         self._digits = digits
+
+    def get_price_precision(self) -> Decimal:
+        return Decimal("1") / (10 ** self._digits)

@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_FLOOR
 from typing import Optional, Union
 from src.fx_calc.symbol import Symbol
 from src.fx_calc.utils import *
@@ -40,6 +40,10 @@ class CalculatorBase:
         else:
             raise TypeError("Symbol must be a non-empty string or a Symbol object.")
 
+    def _raise_error_if_symbol_is_not_set(self) -> None:
+        if self._symbol is None:
+            raise ValueError("Symbol must be set before setting other fields.")
+
     def set_target_currency(self, value: str):
         if not value or not isinstance(value, str):
             raise ValueError("Target currency must be a non-empty string.")
@@ -60,6 +64,7 @@ class CalculatorBase:
 
     def set_position_size_in_lots(self, value: Union[Decimal, int, float, str]):
         value = to_decimal(value)
+        value = value.quantize(Decimal('0.01'), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Position size must be positive.")
@@ -69,7 +74,10 @@ class CalculatorBase:
         self._sl_with_commission_in_money = None
 
     def set_entry_price(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(self._symbol.get_price_precision(), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Entry price must be positive.")
@@ -77,7 +85,10 @@ class CalculatorBase:
         self._entry_price = value
 
     def set_sl_price(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(self._symbol.get_price_precision(), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Stop loss price must be positive.")
@@ -87,7 +98,10 @@ class CalculatorBase:
         self._sl_in_points = None
 
     def set_tp_price(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(self._symbol.get_price_precision(), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Take profit price must be positive.")
@@ -97,7 +111,10 @@ class CalculatorBase:
         self._tp_in_points = None
 
     def set_sl_in_pips(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(Decimal("0.1"), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Stop loss in pips must be positive.")
@@ -107,7 +124,10 @@ class CalculatorBase:
         self._sl_in_points = None
 
     def set_tp_in_pips(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(Decimal("0.1"), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Take profit in pips must be positive.")
@@ -117,7 +137,10 @@ class CalculatorBase:
         self._tp_in_points = None
 
     def set_sl_in_points(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(Decimal("1"), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Stop loss in points must be positive.")
@@ -127,7 +150,10 @@ class CalculatorBase:
         self._sl_in_pips = None
 
     def set_tp_in_points(self, value: Union[Decimal, int, float, str]):
+        self._raise_error_if_symbol_is_not_set()
+
         value = to_decimal(value)
+        value = value.quantize(Decimal("1"), rounding=ROUND_FLOOR)
 
         if value <= 0:
             raise ValueError("Take profit in points must be positive.")

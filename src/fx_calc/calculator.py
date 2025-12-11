@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_FLOOR
+from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 from src.fx_calc.utils import *
 from src.fx_calc.calculator_base import CalculatorBase
 
@@ -18,6 +18,7 @@ class Calculator(CalculatorBase):
         self._calculate_tp_in_money()
         self._calculate_sl_with_commission_in_money()
         self._calculate_tp_with_commission_in_money()
+        self._calculate_risk_reward_ratio()
 
     def _validate(self):
         self._validate_required_fields()
@@ -100,15 +101,19 @@ class Calculator(CalculatorBase):
 
     def _calculate_sl_in_points_by_pips(self):
         self._sl_in_points = convert_pips_to_points(self._sl_in_pips)
+        self._sl_in_points = self._sl_in_points.quantize(Decimal("1"), rounding=ROUND_FLOOR)
 
     def _calculate_tp_in_points_by_pips(self):
         self._tp_in_points = convert_pips_to_points(self._tp_in_pips)
+        self._tp_in_points = self._tp_in_points.quantize(Decimal("1"), rounding=ROUND_FLOOR)
 
     def _calculate_sl_in_pips_by_points(self):
         self._sl_in_pips = convert_points_to_pips(self._sl_in_points)
+        self._sl_in_pips = self._sl_in_pips.quantize(Decimal("0.1"), rounding=ROUND_FLOOR)
 
     def _calculate_tp_in_pips_by_points(self):
         self._tp_in_pips = convert_points_to_pips(self._tp_in_points)
+        self._tp_in_pips = self._tp_in_pips.quantize(Decimal("0.1"), rounding=ROUND_FLOOR)
 
     def _calculate_commission_per_lot_in_pips(self):
         if self._commission_per_lot_in_money is None:
@@ -127,12 +132,18 @@ class Calculator(CalculatorBase):
             commission_per_lot_in_quote = exchange_result[0]
 
         self._commission_per_lot_in_pips = commission_per_lot_in_quote / self._symbol.get_pip_size() / self._symbol.get_lot_size()
+        self._commission_per_lot_in_pips = self._commission_per_lot_in_pips.quantize(Decimal("0.1"), rounding=ROUND_CEILING)
 
     def _calculate_rr_with_commission(self):
         self._sl_with_commission_in_pips = self._sl_in_pips + self._commission_per_lot_in_pips
         self._tp_with_commission_in_pips = self._tp_in_pips - self._commission_per_lot_in_pips
+        self._sl_with_commission_in_pips = self._sl_with_commission_in_pips.quantize(Decimal("0.1"), rounding=ROUND_FLOOR)
+        self._tp_with_commission_in_pips = self._tp_with_commission_in_pips.quantize(Decimal("0.1"), rounding=ROUND_FLOOR)
+
         self._sl_with_commission_in_points = convert_pips_to_points(self._sl_with_commission_in_pips)
         self._tp_with_commission_in_points = convert_pips_to_points(self._tp_with_commission_in_pips)
+        self._sl_with_commission_in_points = self._sl_with_commission_in_points.quantize(Decimal("1"), rounding=ROUND_FLOOR)
+        self._tp_with_commission_in_points = self._tp_with_commission_in_points.quantize(Decimal("1"), rounding=ROUND_FLOOR)
 
     def _calculate_position_size(self):
         if self._position_size_in_lots is not None and self._sl_in_money is None and self._sl_with_commission_in_money is None:
@@ -188,6 +199,8 @@ class Calculator(CalculatorBase):
             )
             self._sl_in_money = exchange_result[0]
 
+        self._sl_in_money = self._sl_in_money.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
+
     def _calculate_tp_in_money(self):
         tp_in_quote = abs(self._entry_price - self._tp_price) * self._symbol.get_lot_size() * self._position_size_in_lots
 
@@ -201,6 +214,8 @@ class Calculator(CalculatorBase):
                 exchange_rate=self._exchange_rate["rate"],
             )
             self._tp_in_money = exchange_result[0]
+
+        self._tp_in_money = self._tp_in_money.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
 
     def _calculate_sl_with_commission_in_money(self):
         self._sl_with_commission_in_qoute = self._sl_with_commission_in_pips * self._symbol.get_pip_size() * self._symbol.get_lot_size() * self._position_size_in_lots
@@ -216,6 +231,8 @@ class Calculator(CalculatorBase):
             )
             self._sl_with_commission_in_money = exchange_result[0]
 
+        self._sl_with_commission_in_money = self._sl_with_commission_in_money.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
+
     def _calculate_tp_with_commission_in_money(self):
         self._tp_with_commission_in_qoute = self._tp_with_commission_in_pips * self._symbol.get_pip_size() * self._symbol.get_lot_size() * self._position_size_in_lots
 
@@ -229,6 +246,15 @@ class Calculator(CalculatorBase):
                 exchange_rate=self._exchange_rate["rate"],
             )
             self._tp_with_commission_in_money = exchange_result[0]
+
+        self._tp_with_commission_in_money = self._tp_with_commission_in_money.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
+
+    def _calculate_risk_reward_ratio(self):
+        self._rrr = self._tp_in_pips / self._sl_in_pips
+        self._rrr = self._rrr.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
+
+        self._rrr_with_commission = self._tp_with_commission_in_pips / self._sl_with_commission_in_pips
+        self._rrr_with_commission = self._rrr_with_commission.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
 
     def get_results(self) -> dict:
         result = {
@@ -263,7 +289,7 @@ class Calculator(CalculatorBase):
                 "sl_in_money": self._sl_in_money,
                 "tp_in_money": self._tp_in_money,
             },
-            "rrr": self._tp_in_pips / self._sl_in_pips,
+            "rrr": self._rrr,
             "rr_with_commission_in_pips": {
                 "sl_with_commission_in_pips": self._sl_with_commission_in_pips,
                 "tp_with_commission_in_pips": self._tp_with_commission_in_pips,
@@ -276,7 +302,7 @@ class Calculator(CalculatorBase):
                 "sl_with_commission_in_money": self._sl_with_commission_in_money,
                 "tp_with_commission_in_money": self._tp_with_commission_in_money,
             },
-            "rrr_with_commission": self._tp_with_commission_in_pips / self._sl_with_commission_in_pips,
+            "rrr_with_commission": self._rrr_with_commission,
         }
 
         return result
