@@ -47,22 +47,6 @@ def to_decimal(value: Union[Decimal, int, float, str]) -> Decimal:
     except:
         raise ValueError(f"Cannot convert value '{value}' to Decimal.")
 
-def get_pip_value_by_symbol(symbol: str) -> Decimal:
-    _, quote = parse_symbol(symbol)
-
-    if quote == "JPY":
-        return Decimal("0.01")
-    else:
-        return Decimal("0.0001")
-
-def get_lot_size_by_symbol(symbol: str) -> Decimal:
-    base, _ = parse_symbol(symbol)
-
-    if base == "XAU":
-        return Decimal("100")
-    else:
-        return Decimal("100000")
-
 def convert_pips_to_points(pips: Decimal) -> Decimal:
     pips = to_decimal(pips)
     return pips * 10

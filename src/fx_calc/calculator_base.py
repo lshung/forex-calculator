@@ -1,15 +1,12 @@
 from decimal import Decimal
 from typing import Optional, Union
+from src.fx_calc.symbol import Symbol
 from src.fx_calc.utils import *
 
 
 class CalculatorBase:
     def __init__(self):
-        self._symbol: Optional[str] = None
-        self._base_currency: Optional[str] = None
-        self._quote_currency: Optional[str] = None
-        self._pip_value: Optional[Decimal] = None
-        self._lot_size: Optional[Decimal] = None
+        self._symbol: Union[Symbol, str, None] = None
         self._target_currency: Optional[str] = "USD"
         self._exchange_rate: Optional[dict] = {"symbol": None, "rate": None}
         self._is_long: Optional[bool] = None
@@ -32,23 +29,16 @@ class CalculatorBase:
         self._sl_with_commission_in_money: Optional[Decimal] = None
         self._tp_with_commission_in_money: Optional[Decimal] = None
 
-    def set_symbol(self, value: str):
+    def set_symbol(self, symbol: Union[Symbol, str]):
         if self._symbol is not None:
             raise ValueError("Symbol is already set.")
 
-        if not value or not isinstance(value, str):
-            raise ValueError("Symbol must be a non-empty string.")
-
-        if not validate_symbol(value):
-            raise ValueError("Invalid symbol.")
-
-        self._symbol = value
-        self._set_related_info_of_symbol()
-
-    def _set_related_info_of_symbol(self):
-        self._base_currency, self._quote_currency = parse_symbol(self._symbol)
-        self._pip_value = get_pip_value_by_symbol(self._symbol)
-        self._lot_size = get_lot_size_by_symbol(self._symbol)
+        if isinstance(symbol, Symbol):
+            self._symbol = symbol
+        elif isinstance(symbol, str):
+            self._symbol = Symbol(symbol)
+        else:
+            raise TypeError("Symbol must be a non-empty string or a Symbol object.")
 
     def set_target_currency(self, value: str):
         if not value or not isinstance(value, str):
