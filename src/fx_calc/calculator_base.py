@@ -20,12 +20,9 @@ class CalculatorBase:
         self._tp_in_points: Optional[Decimal] = None
         self._sl_in_money: Optional[Decimal] = None
         self._tp_in_money: Optional[Decimal] = None
-        self._commission_per_lot_in_pips: Optional[Decimal] = None
-        self._commission_per_lot_in_money: Optional[Decimal] = None
-        self._sl_with_commission_in_pips: Optional[Decimal] = None
-        self._tp_with_commission_in_pips: Optional[Decimal] = None
-        self._sl_with_commission_in_points: Optional[Decimal] = None
-        self._tp_with_commission_in_points: Optional[Decimal] = None
+        self._commission_per_lot_in_money: Decimal = Decimal(0)
+        self._commission_per_lot_in_pips: Decimal = Decimal(0)
+        self._commission_in_money: Decimal = Decimal(0)
         self._sl_with_commission_in_money: Optional[Decimal] = None
         self._tp_with_commission_in_money: Optional[Decimal] = None
 
