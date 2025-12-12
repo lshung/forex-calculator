@@ -4,10 +4,10 @@ from typing import Tuple, Union
 
 
 def parse_symbol(symbol: str) -> Tuple[str, str]:
-    if not symbol or not isinstance(symbol, str):
-        raise TypeError("Symbol must be a non-empty string.")
+    if not isinstance(symbol, str):
+        raise TypeError("Symbol must be a string.")
 
-    cleaned = re.sub(r'[-/]', '', symbol.upper())
+    cleaned = re.sub(r'[-/]', '', symbol.upper().strip())
 
     if len(cleaned) != 6:
         raise ValueError(f"Symbol must contain only 6 letters.")
@@ -24,7 +24,7 @@ def validate_symbol(symbol: str) -> bool:
     try:
         parse_symbol(symbol)
         return True
-    except ValueError:
+    except:
         return False
 
 def extract_base_from_symbol(symbol: str) -> str:
@@ -39,7 +39,7 @@ def to_decimal(value: Union[Decimal, int, float, str]) -> Decimal:
     if isinstance(value, Decimal):
         return value
 
-    if not value or not isinstance(value, (int, float, str)):
+    if not isinstance(value, (int, float, str)):
         raise TypeError(f"Value '{value}' is not a valid number in the format of Decimal, int, float or string.")
 
     try:
@@ -56,8 +56,10 @@ def convert_points_to_pips(points: Decimal) -> Decimal:
     return points / 10
 
 def parse_currency(currency: str) -> str:
-    if not currency or not isinstance(currency, str):
-        raise TypeError("Currency must be a non-empty string.")
+    if not isinstance(currency, str):
+        raise TypeError("Currency must be a string.")
+
+    currency = currency.upper().strip()
 
     if not currency.isalpha():
         raise ValueError("Currency must contain only letters.")
@@ -65,7 +67,7 @@ def parse_currency(currency: str) -> str:
     if len(currency) != 3:
         raise ValueError("Currency must contain only 3 letters.")
 
-    return currency.upper()
+    return currency
 
 def exchange_currency_by_rate(**kwargs: dict) -> (Decimal, str):
     source_amount = to_decimal(kwargs.get("source_amount"))

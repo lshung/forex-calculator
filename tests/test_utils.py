@@ -13,9 +13,9 @@ class TestParseSymbol:
             parse_symbol("EURUS")
         with pytest.raises(ValueError, match="Symbol must contain only letters."):
             parse_symbol("EUR123")
-        with pytest.raises(TypeError, match="Symbol must be a non-empty string."):
+        with pytest.raises(TypeError, match="Symbol must be a string."):
             parse_symbol(None)
-        with pytest.raises(TypeError, match="Symbol must be a non-empty string."):
+        with pytest.raises(TypeError, match="Symbol must be a string."):
             parse_symbol(123456)
 
 

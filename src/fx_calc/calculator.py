@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
+from decimal import Decimal, ROUND_FLOOR
 from src.fx_calc.utils import *
 from src.fx_calc.calculator_base import CalculatorBase
 
@@ -24,13 +24,13 @@ class Calculator(CalculatorBase):
 
     def _validate_required_fields(self):
         if self._symbol is None:
-            raise Exception("Symbol is required.")
+            raise ValueError("Symbol is required.")
 
         if self._is_long is None:
-            raise Exception("Is long is required.")
+            raise ValueError("Is long is required.")
 
         if self._entry_price is None:
-            raise Exception("Entry price is required.")
+            raise ValueError("Entry price is required.")
 
     def _validate_exchange_rate(self):
         if self._symbol.get_quote_currency() == self._target_currency:
@@ -40,18 +40,18 @@ class Calculator(CalculatorBase):
         reverse_exchange_pair = f"{self._target_currency}{self._symbol.get_quote_currency()}"
 
         if self._exchange_rate is None or self._exchange_rate["symbol"] is None or self._exchange_rate["rate"] is None:
-            raise Exception(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
+            raise ValueError(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
 
         if self._exchange_rate["rate"] <= 0:
-            raise Exception("Exchange rate rate must be positive.")
+            raise ValueError("Exchange rate rate must be positive.")
 
         base, quote = parse_symbol(self._exchange_rate["symbol"])
 
         if self._symbol.get_quote_currency() != base and self._symbol.get_quote_currency() != quote:
-            raise Exception(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
+            raise ValueError(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
 
         if self._target_currency != base and self._target_currency != quote:
-            raise Exception(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
+            raise ValueError(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
 
     def _calculate_sl_price_and_in_pips_and_in_points(self):
         if self._sl_price is not None and self._sl_in_pips is None and self._sl_in_points is None:
@@ -64,7 +64,7 @@ class Calculator(CalculatorBase):
             self._calculate_sl_in_pips_by_points()
             self._calculate_sl_price_by_pips()
         else:
-            raise Exception("Only one of the stop loss price, stop loss in pips or stop loss in points is set.")
+            raise ValueError("Only one of the stop loss price, stop loss in pips or stop loss in points is set.")
 
     def _calculate_tp_price_and_in_pips_and_in_points(self):
         if self._tp_price is not None and self._tp_in_pips is None and self._tp_in_points is None:
@@ -77,7 +77,7 @@ class Calculator(CalculatorBase):
             self._calculate_tp_in_pips_by_points()
             self._calculate_tp_price_by_pips()
         else:
-            raise Exception("Only one of the take profit price, take profit in pips or take profit in points is set.")
+            raise ValueError("Only one of the take profit price, take profit in pips or take profit in points is set.")
 
     def _calculate_sl_in_pips_by_prices(self):
         self._sl_in_pips = abs(self._entry_price - self._sl_price) / self._symbol.get_pip_size()
@@ -120,15 +120,18 @@ class Calculator(CalculatorBase):
         if self._symbol.get_quote_currency() == self._target_currency:
             commission_per_lot_in_quote = self._commission_per_lot_in_money
         else:
-            exchange_result = exchange_currency_by_rate(
-                source_amount=self._commission_per_lot_in_money,
-                source_currency=self._target_currency,
-                exchange_symbol=self._exchange_rate["symbol"],
-                exchange_rate=self._exchange_rate["rate"],
-            )
-            commission_per_lot_in_quote = exchange_result[0]
+            commission_per_lot_in_quote = self._exchange_currency(self._commission_per_lot_in_money, self._target_currency)
 
         self._commission_per_lot_in_pips = commission_per_lot_in_quote / self._symbol.get_pip_size() / self._symbol.get_lot_size()
+
+    def _exchange_currency(self, source_amount: Decimal, source_currency: str) -> Decimal:
+        exchange_result = exchange_currency_by_rate(
+            source_amount=source_amount,
+            source_currency=source_currency,
+            exchange_symbol=self._exchange_rate["symbol"],
+            exchange_rate=self._exchange_rate["rate"],
+        )
+        return exchange_result[0]
 
     def _calculate_position_size(self):
         if self._position_size_in_lots is not None and self._sl_in_money is None and self._sl_with_commission_in_money is None:
@@ -138,19 +141,13 @@ class Calculator(CalculatorBase):
         elif self._position_size_in_lots is None and self._sl_in_money is None and self._sl_with_commission_in_money is not None:
             self._calculate_position_size_by_sl_with_commission_in_money()
         else:
-            raise Exception("Only one of the position size in lots, stop loss in money or stop loss with commission in money is set.")
+            raise ValueError("Only one of the position size in lots, stop loss in money or stop loss with commission in money is set.")
 
     def _calculate_position_size_by_sl_in_money(self):
         if self._symbol.get_quote_currency() == self._target_currency:
             sl_in_quote = self._sl_in_money
         else:
-            exchange_result = exchange_currency_by_rate(
-                source_amount=self._sl_in_money,
-                source_currency=self._target_currency,
-                exchange_symbol=self._exchange_rate["symbol"],
-                exchange_rate=self._exchange_rate["rate"],
-            )
-            sl_in_quote = exchange_result[0]
+            sl_in_quote = self._exchange_currency(self._sl_in_money, self._target_currency)
 
         position_size = sl_in_quote / (self._sl_in_pips * self._symbol.get_pip_size() * self._symbol.get_lot_size())
         self._position_size_in_lots = position_size.quantize(Decimal('0.01'), rounding=ROUND_FLOOR)
@@ -159,13 +156,7 @@ class Calculator(CalculatorBase):
         if self._symbol.get_quote_currency() == self._target_currency:
             sl_with_commission_in_quote = self._sl_with_commission_in_money
         else:
-            exchange_result = exchange_currency_by_rate(
-                source_amount=self._sl_with_commission_in_money,
-                source_currency=self._target_currency,
-                exchange_symbol=self._exchange_rate["symbol"],
-                exchange_rate=self._exchange_rate["rate"],
-            )
-            sl_with_commission_in_quote = exchange_result[0]
+            sl_with_commission_in_quote = self._exchange_currency(self._sl_with_commission_in_money, self._target_currency)
 
         sl_with_commission_in_pips = self._sl_in_pips + self._commission_per_lot_in_pips
         position_size = sl_with_commission_in_quote / (sl_with_commission_in_pips * self._symbol.get_pip_size() * self._symbol.get_lot_size())
@@ -177,13 +168,7 @@ class Calculator(CalculatorBase):
         if self._symbol.get_quote_currency() == self._target_currency:
             self._sl_in_money = sl_in_quote
         else:
-            exchange_result = exchange_currency_by_rate(
-                source_amount=sl_in_quote,
-                source_currency=self._symbol.get_quote_currency(),
-                exchange_symbol=self._exchange_rate["symbol"],
-                exchange_rate=self._exchange_rate["rate"],
-            )
-            self._sl_in_money = exchange_result[0]
+            self._sl_in_money = self._exchange_currency(sl_in_quote, self._symbol.get_quote_currency())
 
         self._sl_in_money = self._sl_in_money.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
 
@@ -193,13 +178,7 @@ class Calculator(CalculatorBase):
         if self._symbol.get_quote_currency() == self._target_currency:
             self._tp_in_money = tp_in_quote
         else:
-            exchange_result = exchange_currency_by_rate(
-                source_amount=tp_in_quote,
-                source_currency=self._symbol.get_quote_currency(),
-                exchange_symbol=self._exchange_rate["symbol"],
-                exchange_rate=self._exchange_rate["rate"],
-            )
-            self._tp_in_money = exchange_result[0]
+            self._tp_in_money = self._exchange_currency(tp_in_quote, self._symbol.get_quote_currency())
 
         self._tp_in_money = self._tp_in_money.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
 

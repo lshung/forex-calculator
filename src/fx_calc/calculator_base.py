@@ -25,6 +25,8 @@ class CalculatorBase:
         self._commission_in_money: Decimal = Decimal(0)
         self._sl_with_commission_in_money: Optional[Decimal] = None
         self._tp_with_commission_in_money: Optional[Decimal] = None
+        self._rrr: Optional[Decimal] = None
+        self._rrr_with_commission: Optional[Decimal] = None
 
     def set_symbol(self, symbol: Union[Symbol, str]):
         if self._symbol is not None:
@@ -35,27 +37,27 @@ class CalculatorBase:
         elif isinstance(symbol, str):
             self._symbol = Symbol(symbol)
         else:
-            raise TypeError("Symbol must be a non-empty string or a Symbol object.")
+            raise TypeError("Symbol must be a string or a Symbol object.")
 
     def _raise_error_if_symbol_is_not_set(self) -> None:
         if self._symbol is None:
             raise ValueError("Symbol must be set before setting other fields.")
 
     def set_target_currency(self, value: str):
-        if not value or not isinstance(value, str):
-            raise ValueError("Target currency must be a non-empty string.")
+        if not isinstance(value, str):
+            raise TypeError("Target currency must be a string.")
 
         self._target_currency = parse_currency(value)
 
     def set_exchange_rate(self, value: dict):
         if not isinstance(value, dict):
-            raise ValueError("Exchange rate must be a dictionary.")
+            raise TypeError("Exchange rate must be a dictionary.")
 
         self._exchange_rate = {"symbol": value.get("symbol"), "rate": to_decimal(value.get("rate"))}
 
     def set_is_long(self, value: bool):
         if not isinstance(value, bool):
-            raise ValueError("Is long must be a boolean.")
+            raise TypeError("Is long must be a boolean.")
 
         self._is_long = value
 
