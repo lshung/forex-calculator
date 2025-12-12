@@ -1,6 +1,7 @@
 from decimal import Decimal, ROUND_FLOOR
 from typing import Optional, Union
 from src.fx_calc.symbol import Symbol
+from src.fx_calc.result import Result
 from src.fx_calc.utils import *
 
 
@@ -27,6 +28,7 @@ class CalculatorBase:
         self._tp_with_commission_in_money: Optional[Decimal] = None
         self._rrr: Optional[Decimal] = None
         self._rrr_with_commission: Optional[Decimal] = None
+        self._result: Result = Result()
 
     def set_symbol(self, symbol: Union[Symbol, str]):
         if self._symbol is not None:

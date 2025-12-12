@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_FLOOR
+from typing import Dict, Any
 from src.fx_calc.utils import *
 from src.fx_calc.calculator_base import CalculatorBase
 
@@ -17,6 +18,7 @@ class Calculator(CalculatorBase):
         self._calculate_tp_in_money()
         self._calculate_sl_and_tp_with_commission_in_money()
         self._calculate_risk_reward_ratio()
+        self._set_result()
 
     def _validate(self):
         self._validate_required_fields()
@@ -194,45 +196,13 @@ class Calculator(CalculatorBase):
         self._rrr_with_commission = self._tp_with_commission_in_money / self._sl_with_commission_in_money
         self._rrr_with_commission = self._rrr_with_commission.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
 
-    def get_results(self) -> dict:
-        result = {
-            "symbol": self._symbol.get_symbol(),
-            "base_currency": self._symbol.get_base_currency(),
-            "quote_currency": self._symbol.get_quote_currency(),
-            "lot_size": self._symbol.get_lot_size(),
-            "pip_size": self._symbol.get_pip_size(),
-            "digits": self._symbol.get_digits(),
-            "target_currency": self._target_currency,
-            "exchange_rate": {
-                "symbol": self._exchange_rate["symbol"],
-                "rate": self._exchange_rate["rate"],
-            },
-            "is_long": self._is_long,
-            "position_size_in_lots": self._position_size_in_lots,
-            "entry_price": self._entry_price,
-            "sl_price": self._sl_price,
-            "tp_price": self._tp_price,
-            "commission_per_lot_in_money": self._commission_per_lot_in_money,
-            "commission_per_lot_in_pips": self._commission_per_lot_in_pips,
-            "commission_in_money": self._commission_in_money,
-            "rr_in_pips": {
-                "sl_in_pips": self._sl_in_pips,
-                "tp_in_pips": self._tp_in_pips,
-            },
-            "rr_in_points": {
-                "sl_in_points": self._sl_in_points,
-                "tp_in_points": self._tp_in_points,
-            },
-            "rr_in_money": {
-                "sl_in_money": self._sl_in_money,
-                "tp_in_money": self._tp_in_money,
-            },
-            "rrr": self._rrr,
-            "rr_with_commission_in_money": {
-                "sl_with_commission_in_money": self._sl_with_commission_in_money,
-                "tp_with_commission_in_money": self._tp_with_commission_in_money,
-            },
-            "rrr_with_commission": self._rrr_with_commission,
-        }
+    def _set_result(self):
+        for k, v in vars(self).items():
+            if k.startswith('_') and k != '_result':
+                setattr(self._result, k, v)
 
-        return result
+    def get_result(self) -> Dict[str, Any]:
+        return self._result.get_result()
+
+    def get_result_as_json(self, convert_numbers_to: str = "string") -> str:
+        return self._result.get_result_as_json(convert_numbers_to)
