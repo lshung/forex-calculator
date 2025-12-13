@@ -1,7 +1,7 @@
 import pytest
 from decimal import Decimal
-from src.fx_calc.calculator_base import CalculatorBase
-from src.fx_calc.symbol import Symbol
+from src.fxplan.calculator_base import CalculatorBase
+from src.fxplan.symbol import Symbol
 
 
 class TestSetSymbol:

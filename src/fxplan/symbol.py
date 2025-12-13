@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Optional, Union
-from src.fx_calc.utils import *
+from .utils import *
 
 
 class Symbol:

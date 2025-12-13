@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_FLOOR
 from typing import Dict, Any
-from src.fx_calc.utils import *
-from src.fx_calc.calculator_base import CalculatorBase
+from .calculator_base import CalculatorBase
+from .utils import *
 
 
 class Calculator(CalculatorBase):

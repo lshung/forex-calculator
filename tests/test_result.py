@@ -1,7 +1,7 @@
 import pytest
 from decimal import Decimal
-from src.fx_calc.result import Result
-from src.fx_calc.calculator import Calculator
+from src.fxplan.result import Result
+from src.fxplan.calculator import Calculator
 
 
 def _mock_calculator_state() -> Calculator:

@@ -1,5 +1,5 @@
 import pytest
-from src.fx_calc.utils import *
+from src.fxplan.utils import *
 
 
 class TestParseSymbol:

@@ -1,8 +1,8 @@
 from decimal import Decimal, ROUND_FLOOR
 from typing import Optional, Union
-from src.fx_calc.symbol import Symbol
-from src.fx_calc.result import Result
-from src.fx_calc.utils import *
+from .symbol import Symbol
+from .result import Result
+from .utils import *
 
 
 class CalculatorBase:

@@ -1,4 +1,4 @@
-# FX-CALC
+# FXPLAN
 
 A comprehensive Python library for forex trading calculations, including position sizing, risk/reward analysis, stop loss and take profit calculations, and commission handling.
 
@@ -33,13 +33,13 @@ A comprehensive Python library for forex trading calculations, including positio
 ## Installation
 
 ```bash
-pip install fx-calc
+pip install fxplan
 ```
 
 ## Quick Start
 
 ```python
-from fx_calc import Calculator
+from fxplan import Calculator
 
 # Create a calculator instance
 calc = Calculator()
@@ -232,7 +232,7 @@ print(json_result)
 ### Complete Example
 
 ```python
-from fx_calc import Calculator
+from fxplan import Calculator
 
 calc = Calculator()
 
@@ -279,7 +279,7 @@ calc.set_symbol("EURUSD")
 Different brokers may provide different specifications for the same currency pair (e.g., different lot sizes, pip sizes, or price digits). **Always check the default values first and verify them with your broker's specifications before customizing.**
 
 ```python
-from fx_calc import Calculator, Symbol
+from fxplan import Calculator, Symbol
 
 # Check defaults
 symbol = Symbol("EURUSD")
