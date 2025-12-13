@@ -23,6 +23,7 @@ class Calculator(CalculatorBase):
     def _validate(self):
         self._validate_required_fields()
         self._validate_exchange_rate()
+        self._validate_price_relation()
 
     def _validate_required_fields(self):
         if self._symbol is None:
@@ -55,6 +56,19 @@ class Calculator(CalculatorBase):
         if self._target_currency != base and self._target_currency != quote:
             raise ValueError(f"Exchange rate of '{exchange_pair}' or '{reverse_exchange_pair}' is required.")
 
+    def _validate_price_relation(self):
+        if self._sl_price is not None:
+            if self._is_long and self._sl_price >= self._entry_price:
+                raise ValueError("Stop loss price must be lower than entry price in a long position.")
+            elif not self._is_long and self._sl_price <= self._entry_price:
+                raise ValueError("Stop loss price must be greater than entry price in a short position.")
+
+        if self._tp_price is not None:
+            if self._is_long and self._tp_price <= self._entry_price:
+                raise ValueError("Take profit price must be greater than entry price in a long position.")
+            elif not self._is_long and self._tp_price >= self._entry_price:
+                raise ValueError("Take profit price must be lower than entry price in a short position.")
+
     def _calculate_sl_price_and_in_pips_and_in_points(self):
         if self._sl_price is not None and self._sl_in_pips is None and self._sl_in_points is None:
             self._calculate_sl_in_pips_by_prices()
@@ -65,6 +79,8 @@ class Calculator(CalculatorBase):
         elif self._sl_in_points is not None and self._sl_price is None and self._sl_in_pips is None:
             self._calculate_sl_in_pips_by_points()
             self._calculate_sl_price_by_pips()
+        elif self._sl_price is None and self._sl_in_pips is None and self._sl_in_points is None:
+            raise ValueError("One of the stop loss price, stop loss in pips or stop loss in points must be set.")
         else:
             raise ValueError("Only one of the stop loss price, stop loss in pips or stop loss in points is set.")
 
@@ -78,6 +94,8 @@ class Calculator(CalculatorBase):
         elif self._tp_in_points is not None and self._tp_price is None and self._tp_in_pips is None:
             self._calculate_tp_in_pips_by_points()
             self._calculate_tp_price_by_pips()
+        elif self._tp_price is None and self._tp_in_pips is None and self._tp_in_points is None:
+            raise ValueError("One of the take profit price, take profit in pips or take profit in points must be set.")
         else:
             raise ValueError("Only one of the take profit price, take profit in pips or take profit in points is set.")
 

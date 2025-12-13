@@ -27,10 +27,14 @@ class Symbol:
     def _set_standard_pip_size(self) -> None:
         if self._quote_currency == "JPY":
             self._pip_size = Decimal("0.01")
+        elif self._base_currency == "XAU":
+            self._pip_size = Decimal("0.01")
 
     def _set_standard_digits(self) -> None:
         if self._quote_currency == "JPY":
             self._digits = Decimal("3")
+        elif self._base_currency == "XAU":
+            self._digits = Decimal("2")
 
     def get_symbol(self) -> str:
         return self._symbol
